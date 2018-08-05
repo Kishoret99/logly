@@ -28,6 +28,7 @@ var app = {
     // 'pause', 'resume', etc.
     onDeviceReady: function() {
         this.receivedEvent('deviceready');
+        requestLog();
     },
 
     // Update DOM on a Received Event
@@ -44,3 +45,73 @@ var app = {
 };
 
 app.initialize();
+var callFilter = [{
+    "name": "date", 
+    "value": 0, 
+    "operator": ">="
+}]
+
+function requestLog() {
+    window.plugins.callLog.hasReadPermission(onSuccess, onError);
+}
+
+function onSuccess(response) {
+    if(response) {
+        window.plugins.callLog.getCallLog( callFilter, function(data) {
+            console.log(data);
+        }, function(err) {
+            console.log('error while getting call log', err);
+        })
+    } else {
+        window.plugins.callLog.requestReadPermission(requestLog, (err) => console.log('error while requesting the permission', err))
+    }
+}
+
+function onError(err) {
+    console.log('error while checking the permission', err)
+}
+
+var a = [
+    {
+        cachedNumberLabel: 0,
+        cachedNumberType: 0,
+        contact: 1,
+        date: 1533404602426,
+        duration: 37,
+        name: "Sai Akhil",
+        new: 1,
+        number: "9967819918",
+        phoneAccountId: "89014103211118510720",
+        type: 2,
+        viaNumber: ""
+    },
+    {
+        cachedName: "Vivek Vardhan",
+        cachedNumberLabel: 0,
+        cachedNumberType: 2,
+        contact: 259,
+        date: 1533410893339,
+        duration: 8,
+        name: "Vivek Vardhan",
+        new: 1,
+        number: "+918332870828",
+        phoneAccountId: "89014103211118510720",
+        photo: "content://com.android.contacts/contacts/259/photo",
+        thumbPhoto: "content://com.android.contacts/contacts/259/photo",
+        type: 2,
+        viaNumber: ""
+    },
+    {
+        cachedNumberLabel: 0,
+        cachedNumberType: 0,
+        contact: 1,
+        date: 1533410829248,
+        duration: 6,
+        name: "Sai Akhil",
+        new: 1,
+        number: "22222333",
+        phoneAccountId: "89014103211118510720",
+        type: 2,
+        viaNumber: ""
+    }
+]
