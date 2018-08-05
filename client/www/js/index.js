@@ -1,25 +1,38 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
+var callLog = [];
+function add(data) {
+    var length = data.length;
+    for(var i = 0; i < length; i++) {
+        var newDiv = new ListItem(data.pop()).newDiv;
+        var list = document.getElementsByClassName('list')[0]
+        list.insertBefore(newDiv, list.firstChild)
+    }
+}
+
+var callType = new Map();
+callType.set(1, 'Incoming');
+callType.set(2, 'Outgoing')
+callType.set(3, 'Missed')
+
+function ListItem(contact) {
+    this.newDiv = document.createElement("div", {});
+    var newH2 = document.createElement("h2");
+    var newP = document.createElement("p");
+
+    newH2.innerHTML = contact.number;
+    newP.innerHTML = callType.get(contact.type);
+
+    this.newDiv.classList.add('item');
+    newP.classList.add('text-grey-500');
+
+    this.newDiv.appendChild(newH2);
+    this.newDiv.appendChild(newP);
+}
+
 var app = {
     // Application Constructor
     initialize: function() {
         document.addEventListener('deviceready', this.onDeviceReady.bind(this), false);
+        document.addEventListener('resume', this.onDeviceReady.bind(this), false);  
     },
 
     // deviceready Event Handler
@@ -27,38 +40,39 @@ var app = {
     // Bind any cordova events here. Common events are:
     // 'pause', 'resume', etc.
     onDeviceReady: function() {
-        this.receivedEvent('deviceready');
-        requestLog();
-    },
+        // this.receivedEvent('deviceready');
+        if(!callLog || !Array.isArray(callLog) || callLog.length < 1) {
+            requestLog(callFilter(0));
+        } else {
+            requestLog(callFilter(callLog[0].date)) 
+        }
+    }
 
     // Update DOM on a Received Event
-    receivedEvent: function(id) {
-        var parentElement = document.getElementById(id);
-        var listeningElement = parentElement.querySelector('.listening');
-        var receivedElement = parentElement.querySelector('.received');
-
-        listeningElement.setAttribute('style', 'display:none;');
-        receivedElement.setAttribute('style', 'display:block;');
-
-        console.log('Received Event: ' + id);
-    }
 };
 
 app.initialize();
-var callFilter = [{
-    "name": "date", 
-    "value": 0, 
-    "operator": ">="
-}]
-
-function requestLog() {
-    window.plugins.callLog.hasReadPermission(onSuccess, onError);
+function callFilter(date) {
+    return [{
+        "name": "date", 
+        "value": date, 
+        "operator": ">"
+    }]
 }
 
-function onSuccess(response) {
+function requestLog(date) {
+    window.plugins.callLog.hasReadPermission(onISuccess, onError);
+    function onISuccess(response) {
+        onSuccess(response, date)
+    }
+}
+
+function onSuccess(response, date) {
     if(response) {
-        window.plugins.callLog.getCallLog( callFilter, function(data) {
+        window.plugins.callLog.getCallLog(date, function(data) {
             console.log(data);
+            callLog = callLog.concat(data);
+            add(data);
         }, function(err) {
             console.log('error while getting call log', err);
         })
